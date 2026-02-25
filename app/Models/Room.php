@@ -2,38 +2,38 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Room extends Model
 {
-    // Asegúrate de incluir todos los campos que se llenan desde el formulario
+    use HasFactory;
+
     protected $fillable = [
-        'name', 
-        'slug', 
-        'description', 
-        'price_per_night', 
-        'capacity', 
-        'is_active'
+        'name',
+        'slug',           // <--- ¡ESTO FALTABA! Descoméntalo o agrégalo.
+        'description',
+        'price_per_night',
+        'capacity',
+        'capacity_label',
+        'image_path',
+        'is_available',
     ];
 
     /**
-     * Relación: Una habitación tiene muchas fotos en su galería.
-     * Usamos HasMany para que coincida con la tabla 'room_images' que creamos.
+     * Relación con Reservaciones
+     */
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class);
+    }
+
+    /**
+     * Relación con Galería de Imágenes
      */
     public function images(): HasMany
     {
         return $this->hasMany(RoomImage::class);
-    }
-
-    /**
-     * Relación: Una habitación tiene muchas reservas.
-     * Mantenemos MorphMany si tu sistema de reservas es polimórfico 
-     * (es decir, si la Palapa también usa la misma tabla de Bookings).
-     */
-    public function bookings(): MorphMany
-    {
-        return $this->morphMany(Booking::class, 'bookable');
     }
 }

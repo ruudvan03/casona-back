@@ -15,7 +15,6 @@ class RoomController extends Controller
      */
     public function index()
     {
-        // Eager loading para evitar el problema de consultas N+1
         $rooms = Room::with('images')->latest()->get();
         return view('admin.rooms.index', compact('rooms'));
     }
@@ -42,28 +41,37 @@ class RoomController extends Controller
             'images.*' => 'image|mimes:jpeg,png,jpg|max:2048', 
         ]);
 
-        // 1. Crear la habitación
+        // 1. Crear la habitación (inicialmente sin imagen de portada)
         $room = Room::create([
             'name' => $request->name,
             'slug' => Str::slug($request->name),
             'price_per_night' => $request->price_per_night,
             'capacity' => $request->capacity,
+            'capacity_label' => $request->capacity . ' Personas', // Etiqueta automática
             'description' => $request->description,
+            'is_available' => true,
         ]);
 
         // 2. Procesar y guardar cada imagen en la galería
         if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $file) {
+            foreach ($request->file('images') as $key => $file) {
+                // Guardar archivo físico
                 $path = $file->store('rooms', 'public');
                 
+                // Crear registro en tabla room_images
                 RoomImage::create([
                     'room_id' => $room->id,
                     'path' => $path
                 ]);
+
+                // --- MAGIA: La primera imagen se convierte en la PORTADA ---
+                if ($key === 0) {
+                    $room->update(['image_path' => $path]);
+                }
             }
         }
 
-        return redirect()->route('rooms.index')->with('success', 'Habitación y galería creadas con éxito.');
+        return redirect()->route('rooms.index')->with('success', 'Habitación creada con portada y galería.');
     }
 
     /**
@@ -93,17 +101,23 @@ class RoomController extends Controller
             'slug' => Str::slug($request->name),
             'price_per_night' => $request->price_per_night,
             'capacity' => $request->capacity,
+            'capacity_label' => $request->capacity . ' Personas',
             'description' => $request->description,
         ]);
 
         if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $file) {
+            foreach ($request->file('images') as $key => $file) {
                 $path = $file->store('rooms', 'public');
                 
                 RoomImage::create([
                     'room_id' => $room->id,
                     'path' => $path
                 ]);
+
+                // Si la habitación NO tiene portada aún, usamos la primera nueva
+                if (!$room->image_path && $key === 0) {
+                    $room->update(['image_path' => $path]);
+                }
             }
         }
 
@@ -115,8 +129,18 @@ class RoomController extends Controller
      */
     public function destroy(Room $room)
     {
+        // Borramos todas las imágenes de la galería del disco
         foreach ($room->images as $image) {
-            Storage::disk('public')->delete($image->path);
+            if (Storage::disk('public')->exists($image->path)) {
+                Storage::disk('public')->delete($image->path);
+            }
+            $image->delete();
+        }
+        
+        // También borramos la imagen de portada si existe y es diferente
+        if ($room->image_path && Storage::disk('public')->exists($room->image_path)) {
+            // Verificamos si no es la misma que ya borramos (caso raro pero posible)
+            Storage::disk('public')->delete($room->image_path);
         }
         
         $room->delete();
@@ -125,11 +149,16 @@ class RoomController extends Controller
     }
 
     /**
-     * NUEVO: Eliminar una sola imagen de la galería.
+     * Eliminar una sola imagen de la galería.
      */
-    public function deleteImage(RoomImage $image)
+    public function deleteImage($id)
     {
-        Storage::disk('public')->delete($image->path);
+        $image = RoomImage::findOrFail($id);
+        
+        if (Storage::disk('public')->exists($image->path)) {
+            Storage::disk('public')->delete($image->path);
+        }
+        
         $image->delete();
 
         return back()->with('success', 'Imagen eliminada de la galería.');
