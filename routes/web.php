@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\Admin\ReservationController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EventController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,27 +29,26 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::middleware('auth')->group(function () {
     
-    // DASHBOARD PRINCIPAL (ACTUALIZADO)
-    // Ahora conecta con el controlador para mostrar ingresos, ocupación y folios pendientes
+    // DASHBOARD PRINCIPAL
+    // Conecta con el controlador para mostrar ingresos, ocupación y folios pendientes
     Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
 
     // --- Gestión de Habitaciones (CRUD de espacios en La Casona) ---
     Route::resource('admin/rooms', RoomController::class)->names('rooms');
 
-    // --- Gestión de Reservaciones (CRUD y Calendario FullCalendar) ---
+    // --- Gestión de Reservaciones (Habitaciones) ---
     
-    // Listado principal con calendario y tabla de búsqueda por Folio
+    // Listado principal con calendario y tabla de búsqueda
     Route::get('/admin/reservations', [ReservationController::class, 'index'])->name('reservations.index');
     
     // Verificación de disponibilidad de habitaciones
     Route::get('/admin/reservations/check', [ReservationController::class, 'checkAvailability'])->name('reservations.check');
     Route::post('/admin/reservations/verify', [ReservationController::class, 'verify'])->name('reservations.verify');
     
-    // Almacenamiento de nuevas reservas (confirmación inicial)
+    // Almacenamiento de nuevas reservas
     Route::post('/admin/reservations/store', [ReservationController::class, 'store'])->name('reservations.store');
 
     // CONTROL MANUAL DE ESTADOS (Módulo de operación rápida)
-    // Permite cambiar entre Confirmada, Pendiente o Cancelada directamente desde la tabla
     Route::patch('/admin/reservations/{reservation}/status/{status}', [ReservationController::class, 'updateStatus'])->name('reservations.status');
 
     // Gestión de registros existentes
@@ -57,9 +57,26 @@ Route::middleware('auth')->group(function () {
     Route::delete('/admin/reservations/{reservation}', [ReservationController::class, 'destroy'])->name('reservations.destroy');
 
     // DOCUMENTACIÓN LEGAL (Contrato de Hospedaje)
-    // Generación de PDF con Base64 para evitar errores de la extensión GD
     Route::get('/admin/reservations/{reservation}/pdf', [ReservationController::class, 'downloadContract'])->name('reservations.pdf');
 
-    // --- Próximamente: Gestión de Palapa / Eventos Sociales ---
-    // Route::resource('admin/palapa', PalapaController::class)->names('palapa');
+
+    // --- NUEVO: Gestión de Palapa / Eventos Sociales ---
+    // Módulo independiente para la renta de áreas comunes por hora/día
+    
+    // Listado y Calendario de Eventos
+    Route::get('/admin/events', [EventController::class, 'index'])->name('events.index');
+    
+    // Almacenamiento con lógica de anticipo del 50%
+    Route::post('/admin/events/store', [EventController::class, 'store'])->name('events.store');
+    
+    // Control de estados (Liquidado, Pendiente, Cancelado)
+    Route::patch('/admin/events/{event}/status/{status}', [EventController::class, 'updateStatus'])->name('events.status');
+    
+    // Eliminación de eventos
+    Route::delete('/admin/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
+
+    // DOCUMENTACIÓN LEGAL (NUEVO: Contrato de Renta de Palapa)
+    // Permite descargar el contrato específico para eventos en formato PDF
+    Route::get('/admin/events/{event}/pdf', [EventController::class, 'downloadContract'])->name('events.pdf');
+
 });

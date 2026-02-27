@@ -12,7 +12,7 @@ class Room extends Model
 
     protected $fillable = [
         'name',
-        'slug',           // <--- ¡ESTO FALTABA! Descoméntalo o agrégalo.
+        'slug',           
         'description',
         'price_per_night',
         'capacity',

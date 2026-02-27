@@ -13,14 +13,16 @@
     
     <style> 
         body { font-family: 'Plus Jakarta Sans', sans-serif; } 
-        /* CLAVE: Evita el parpadeo inicial */
         [x-cloak] { display: none !important; }
         
-        /* Transición de hardware para suavidad extrema */
         .sidebar-transition { 
             transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
             will-change: width;
         }
+
+        /* Scrollbar estética para el nav */
+        nav::-webkit-scrollbar { width: 4px; }
+        nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
     </style>
 </head>
 <body class="bg-gray-100/50 text-slate-900 antialiased" 
@@ -36,6 +38,7 @@
             :class="sidebarOpen ? 'w-64' : 'w-20'" 
             class="sidebar-transition bg-emerald-950 text-white flex flex-col shadow-xl z-30 relative shrink-0 overflow-x-hidden"
         >
+            {{-- Botón colapsador --}}
             <button 
                 @click="sidebarOpen = !sidebarOpen" 
                 class="absolute -right-3 top-10 bg-emerald-500 text-white rounded-full p-1.5 shadow-lg hover:scale-110 transition-all z-50 border-2 border-emerald-950"
@@ -45,6 +48,7 @@
                 </svg>
             </button>
 
+            {{-- Logo --}}
             <div class="p-4 border-b border-emerald-900/50 flex justify-center items-center h-32 shrink-0 overflow-hidden relative">
                 <img src="/images/logo.png" 
                      alt="Logo La Casona" 
@@ -52,8 +56,10 @@
                      class="transition-all duration-300 brightness-0 invert drop-shadow-2xl">
             </div>
             
+            {{-- Navegación Principal --}}
             <nav class="flex-1 px-4 py-6 space-y-3 overflow-y-auto overflow-x-hidden">
                 
+                {{-- Dashboard --}}
                 <a href="{{ route('admin.dashboard') }}" 
                    class="flex items-center rounded-xl transition-all p-3 group {{ request()->routeIs('admin.dashboard') ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-900/50' : 'text-emerald-100 hover:bg-emerald-900' }}"
                    :class="sidebarOpen ? 'justify-start' : 'justify-center'">
@@ -67,15 +73,17 @@
                     Administración
                 </div>
 
+                {{-- Reservaciones (Habitaciones) --}}
                 <a href="{{ route('reservations.index') }}" 
                    class="flex items-center rounded-xl transition-all p-3 group {{ request()->routeIs('reservations.*') ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-900/50' : 'text-emerald-100 hover:bg-emerald-900' }}"
                    :class="sidebarOpen ? 'justify-start' : 'justify-center'">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" />
                     </svg>
                     <span x-show="sidebarOpen" x-transition.opacity.duration.200ms class="ml-3 font-bold text-sm uppercase tracking-wider whitespace-nowrap">Reservaciones</span>
                 </a>
 
+                {{-- Habitaciones --}}
                 <a href="{{ route('rooms.index') }}" 
                    class="flex items-center rounded-xl transition-all p-3 group {{ request()->routeIs('rooms.*') ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-900/50' : 'text-emerald-100 hover:bg-emerald-900' }}"
                    :class="sidebarOpen ? 'justify-start' : 'justify-center'">
@@ -89,7 +97,9 @@
                     Eventos
                 </div>
 
-                <a href="#" class="flex items-center rounded-xl transition-all p-3 text-emerald-100 hover:bg-emerald-900 group"
+                {{-- PALAPA / EVENTOS (ACTUALIZADO) --}}
+                <a href="{{ route('events.index') }}" 
+                   class="flex items-center rounded-xl transition-all p-3 group {{ request()->routeIs('events.*') ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-900/50' : 'text-emerald-100 hover:bg-emerald-900' }}"
                    :class="sidebarOpen ? 'justify-start' : 'justify-center'">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -98,6 +108,7 @@
                 </a>
             </nav>
 
+            {{-- Logout --}}
             <div class="p-4 border-t border-emerald-900/50">
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
@@ -113,6 +124,7 @@
         </aside>
 
         <main class="flex-1 flex flex-col overflow-hidden bg-slate-100/80">
+            {{-- Header --}}
             <header class="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-10 shrink-0">
                 <h1 class="text-xl font-bold text-slate-800">Panel de Control</h1>
                 <div class="flex items-center gap-3 bg-slate-50 border border-slate-200 px-4 py-2 rounded-2xl">
@@ -126,8 +138,8 @@
                 </div>
             </header>
             
+            {{-- Content Area --}}
             <div class="flex-1 overflow-y-auto p-4 md:p-10">
-                {{-- Alertas Globales --}}
                 @if(session('success'))
                     <div class="max-w-4xl mx-auto mb-6 bg-emerald-50 border border-emerald-200 text-emerald-700 px-6 py-4 rounded-2xl flex items-center shadow-sm" x-data="{ show: true }" x-show="show" x-cloak>
                         <svg class="w-5 h-5 mr-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -135,6 +147,16 @@
                         </svg>
                         <span class="font-bold flex-1 text-sm">{{ session('success') }}</span>
                         <button @click="show = false" class="text-emerald-400 hover:text-emerald-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div class="max-w-4xl mx-auto mb-6 bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-2xl flex items-center shadow-sm" x-data="{ show: true }" x-show="show" x-cloak>
+                        <svg class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                        <span class="font-bold flex-1 text-sm">{{ session('error') }}</span>
+                        <button @click="show = false" class="text-red-400 hover:text-red-600 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </button>
                     </div>
